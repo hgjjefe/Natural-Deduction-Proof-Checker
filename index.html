@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natural Deduction Proof Checker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="todo-app">
+            <h2>Natural Deduction Proof Checker <img src="images/icon.png"></h2>
+            Available rules: MP, MT, HS, DS, CD, Abs, Simp, Conj, Add
+            <br><br>
+            <div class="input-row">
+                <input type="text" id="input-box" placeholder="Add your premise">
+                <button id="add-btn" onclick="addPremise()">Add</button>
+            </div>
+            <div style="padding: 10px 5px 10px;"><b>Premises:</b> </div>
+            <ol id="list-container">
+            </ol>
+            <br>
+            <div class="conclusion"><div style="padding-bottom: 5px;"><b>Conclusion: </b></div>
+                <div class="editable-conclusion" contenteditable="true" style="border: black solid 2px;"></div>
+                <button id="submit-btn" onclick="submit()">Submit</button>
+            </div>
+            <br>
+            <b>Proof: </b>
+            <ol id="proof-container">
+                
+            </ol>
+        </div>
+
+    </div>
+<script src="script.js"></script>
+</body>
+</html>

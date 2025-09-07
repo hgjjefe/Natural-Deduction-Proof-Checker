@@ -1,0 +1,138 @@
+*{
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box;
+}
+
+.container{
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #afe4ff, #ffe7af);
+    padding: 10px;
+}
+.todo-app{
+    width: 100%;
+    max-width: 540px;
+    background: #fff;
+    margin: 100px auto 20px;
+    padding: 40px 30px 70px;
+    border-radius: 10px;
+}
+.todo-app h2{
+    color: #002765;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.todo-app h2 img{
+    width: 30px;
+    margin-left: 10px;
+}
+.input-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #edeef0;
+    border-radius: 30px;
+    padding-left: 20px;
+    margin-bottom: 5px;
+}
+input{
+    flex: 1;
+    width: 100%;
+    font-size: 18px;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 10px;
+}
+#add-btn {
+    border: none;
+    outline: none;
+    padding: 16px 40px;
+    background: #ff5495;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 40px;
+}
+#submit-btn {
+    border: none;
+    outline: none;
+    position: absolute;
+    right: 0;
+    top: 20px;
+    padding: 16px 30px;
+    background: #6395ed;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 40px;
+}
+ol{
+    padding-left: 30px;
+}
+ol li{
+    font-size: 18px;
+    user-select: none;
+    cursor: text;
+    position: relative;
+}
+ul li::before{
+    content: '';
+    position: absolute;
+    height: 28px;
+    width: 28px;
+    border-radius: 50%;
+    background-image: url('images/unchecked.png');
+    background-size: cover;
+    background-position: center;
+    top: 12px;
+    left: 8px;
+    
+}
+.editable{
+    width: 400px;
+    padding: 12px 8px 12px 10px;
+    background-color: #edeef0;
+}
+.editable-conclusion{
+    width: 360px;
+    padding: 12px 8px 12px 10px;
+}
+.close{
+    position: absolute;
+    right: 0;
+    top: 0px;
+    width: 45px;
+    height: 45px;
+    font-size: 35px;
+    color: #d32424;
+    line-height: 40px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+.close:hover{
+    background: lightgray;
+}
+.tick{
+    position: absolute;
+    right: 0;
+    top: 0px;
+    width: 45px;
+    height: 45px;
+    font-size: 35px;
+    color: #1c9c19;
+    line-height: 40px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+.tick:hover{
+    background: lightgray;
+}
+.conclusion{
+    position: relative;
+}
