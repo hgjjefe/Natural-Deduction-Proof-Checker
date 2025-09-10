@@ -248,7 +248,7 @@ function parse(formula){
             case '¬': return [null, 4]; // Right associative
             case '∧': return [3, 3.1];
             case '∨': return [2, 2.1];
-            case '→': return [1, 1.1];
+            case '→': return [1.1, 1];
             case '↔': return [0, 0.1];
             default: return [0, 0];
         }
@@ -341,7 +341,8 @@ console.log(syntaxTreeToString(syntaxTree));  // Should return the original form
 /*  Reasons */
 
 const REASONS = [null, "MP", "MT", "HS", "DS", "CD", "Abs", "Simp", "Conj", "Add",
-    "DM", "Com", "Assoc", "Dist", "DN", "Trans", "Impl", "Equiv", "Exp", "Taut"];
+    "DM", "Com", "Assoc", "Dist", "DN", "Trans", "Impl", "Equiv", "Exp", "Taut"
+];
 
 function checkProofLine(text){
     // Trim whitespace from the formula
@@ -379,8 +380,20 @@ function checkProofLine(text){
             alert(`The second argument "${arguments[1]}" is not valid! It must be "L" or "R".`);
             return null;
         }
+    }else if (reason == "DM"){  // DeMorgan's Law
+        arguments = [parseInt(parts[0])]; // First argument is line number
+        arguments.push(parts[1]); // Second argument is AF/AB/OF/OB or undefined
+        arguments.push(parts[2] === undefined ? 1 : parts[2]);  // nth
+        if (isNaN(arguments[0]) || arguments[0] < 1 || arguments[0] > syntaxTrees.length){
+            alert(`The line number "${parts[0]}" is not valid!`);
+            return null;
+        }
+        if (!['AF','AB','OF','OB'].includes(parts[1]) && parts[1] !== undefined){
+            alert(`The second argument "${parts[1]}" is not valid! It must be "AF"/"AB"/"OF"/"OB".`);
+            return null;
+        }
     }
-    else{
+    else{   // The Default for the rest of reasons
         arguments = parts.map(numStr => {
         let lineNum = parseInt(numStr); // Convert to integer
         if (isNaN(lineNum) || lineNum < 1 || lineNum > syntaxTrees.length){
@@ -457,7 +470,7 @@ function checkProofLine(text){
             alert(`The reason "${reason}" is not yet implemented!`);
             return false;
     }
-    if (result===-1) return false; // Error in arguments
+    if (result===-1) return false; // Error in arguments, skip alert
     console.log("RESULT:", result);
     if (!result){
         alert(`${reason} could not be applied with the given lines!`);
@@ -699,4 +712,148 @@ function Add(line1, atomQ='Q'){
     let newRight = newSyntaxTree(atomQ); // Placeholder for Q
     let resultNode = newSyntaxTree('∨', premise1, newRight); // P ∨ Q
     return syntaxTreeToString(resultNode); // Return the disjunction as the conclusion
+}
+
+/* RULES OF REPLACEMENT IMPLMENTATION */
+
+// Search for the n-th node matching targetValue in the syntax tree
+function searchSyntaxTree(node, targetValue, nth=1) { // ith is current count
+    let ith = 1; // Initialize current count
+    function preOrderSearch(node) {  // Recursive pre-order search helper function
+        if (node === null) return false;
+        // console.log(`Visiting node: ${node.value}, ith=${ith}`);
+        if (node.value === targetValue){   // Find a match
+            if (ith === nth){
+                return node;
+            } else {
+                ith += 1;   // Increment current count
+            }
+        }
+        let leftResult = preOrderSearch(node.left);
+        if (leftResult) return leftResult;
+        let rightResult = preOrderSearch(node.right);
+        if (rightResult) return rightResult;
+        return false;  // Not found
+    }
+    return preOrderSearch(node);
+}
+// Search for the n-th subtree matching targetValues in the syntax tree
+function searchSubTree(node, targetValueList, nth=1) { // ith is current count
+    let ith = 1; // Initialize current count
+    function preOrderSearch(node) {  // Recursive pre-order search helper function
+        if (node === null) return false;
+        //console.log(`Visiting node: ${node.value}, ith=${ith}`);
+        //console.log("INFO:", node.left, node.right, targetValueList.length)
+        if (targetValueList.length ===1 && node.value === targetValueList[0] ||
+            targetValueList.length ===2 && node.value === targetValueList[0] && node.left.value === targetValueList[1] ||
+            targetValueList.length ===3 && node.value === targetValueList[0] && node.left.value === targetValueList[1] && node.right.value === targetValueList[2]
+        ){   // Find a match
+            if (ith === nth){
+                return node;
+            } else {
+                ith += 1;   // Increment current count
+            }
+        }
+        let leftResult = preOrderSearch(node.left);
+        if (leftResult) return leftResult;
+        let rightResult = preOrderSearch(node.right);
+        if (rightResult) return rightResult;
+        return false;  // Not found
+    }
+    return preOrderSearch(node);
+}
+
+/* Test  
+let formula1 = "¬(¬P ∧ ¬Q ∧ ¬(A ∧ ¬B) ) ↔ ¬T → U"
+formula1 = "¬(A ∧ B)"
+console.log("Testing searchSyntaxTree:");
+let tree1 = parse(formula1);
+printTree(tree1);
+let searchResult = searchSubTree(tree1, ['¬', '∧'], 1);
+console.log("Search result:", searchResult); // Should return "¬S"
+*/
+
+
+// Rule 10: De Morgan's Laws:
+// ¬(P ∧ Q) ≡ ¬P ∨ ¬Q
+// ¬(P ∨ Q) ≡ ¬P ∧ ¬Q
+
+function DMAF(line1, nth=1){   // And Forward
+    if (arguments.length < 1){
+        alert("Simp Error: Not enough arguments!");
+        return -1;
+    }
+    let premise1 = syntaxTrees[line1 - 1];
+    let matchingNode = searchSubTree(premise1, ['¬', '∧'], nth);
+    if (!matchingNode){
+        console.log(`DM Error: No matching ¬(P ∧ Q) found!`);
+        return false;
+    }
+    let P = matchingNode.left.left; 
+    let Q = matchingNode.left.right;
+    let notP = newSyntaxTree('¬', P);
+    let notQ = newSyntaxTree('¬', Q);
+    let resultNode = newSyntaxTree('∨', notP, notQ);
+    return syntaxTreeToString(resultNode); // Return the disjunction as the conclusion
+}
+
+function DM(line1, mode, nth=1){
+    if (arguments.length < 1){
+        alert("Simp Error: Not enough arguments!");
+        return -1;
+    }
+    let premise1 = syntaxTrees[line1 - 1];
+    printTree(premise1);
+    
+    let matchingNode = null;
+    if (mode === undefined){   // Auto-detect mode
+        if (searchSubTree(premise1, ['¬', '∧'], nth)) mode = 'AF';
+        else if (searchSubTree(premise1, ['∨', '¬', '¬'], nth)) mode = 'AB'
+        else if (searchSubTree(premise1, ['¬', '∨'], nth)) mode = 'OF';
+        else if (searchSubTree(premise1, ['∧', '¬', '¬'], nth)) mode = 'OB';
+    }
+    if (mode === 'AF'){ // Forward And
+        matchingNode = searchSubTree(premise1, ['¬', '∧'], nth);   // Shorten the name for convenience
+        if (matchingNode){
+            let P = matchingNode.left.left; 
+            let Q = matchingNode.left.right;
+            let notP = newSyntaxTree('¬', P);
+            let notQ = newSyntaxTree('¬', Q);
+            let resultNode = newSyntaxTree('∨', notP, notQ);
+            return syntaxTreeToString(resultNode); // Return the disjunction as the conclusion
+        }
+    }else if (mode === 'AB'){ // Backward And
+        matchingNode = searchSubTree(premise1, ['∨', '¬', '¬'], nth);
+        if (matchingNode){
+            let P = matchingNode.left.left; 
+            let Q = matchingNode.right.left;
+            let PAndQ = newSyntaxTree('∧', P, Q);
+            let resultNode = newSyntaxTree('¬', PAndQ);
+            return syntaxTreeToString(resultNode); // Return the not conjunction as the conclusion
+        }
+    }else if (mode === 'OF'){ // Forward Or
+        matchingNode =  searchSubTree(premise1, ['¬', '∨'], nth);
+        if (matchingNode){
+            let P = matchingNode.left.left; 
+            let Q = matchingNode.left.right;
+            let notP = newSyntaxTree('¬', P);
+            let notQ = newSyntaxTree('¬', Q);
+            let resultNode = newSyntaxTree('∧', notP, notQ);
+            return syntaxTreeToString(resultNode); // Return the conjunction as the conclusion
+        }
+    }else if (mode === 'OB'){ // Backward Or
+        matchingNode = searchSubTree(premise1, ['∧', '¬', '¬'], nth);
+        if (matchingNode){
+            let P = matchingNode.left.left; 
+            let Q = matchingNode.right.left;
+            let PAndQ = newSyntaxTree('∨', P, Q);
+            let resultNode = newSyntaxTree('¬', PAndQ);
+            return syntaxTreeToString(resultNode); // Return the not disjunction as the conclusion
+        }
+    }
+    if (!matchingNode){
+        console.log(`DM Error: No matching ¬(P ∧ Q) or ¬P ∨ ¬Q or ¬(P ∨ Q) or ¬P ∧ ¬Q found!`);
+        return false;
+    }
+    
 }
